@@ -33,7 +33,7 @@ La aplicación permite a los administradores generar invitaciones y gestionar us
 🔹 **Dashboard de Administrador**  
 ![image](https://github.com/user-attachments/assets/3c196f6c-db90-4bf2-87e3-27d082afd7d1)
 
-🔹 **Dashboard de Usuario**  
+🔹 **Dashboard de Invitado**  
 ![image](https://github.com/user-attachments/assets/9924a2d4-2a8b-4375-ba92-02c9c6fea1e4)
 
 ## 📥 Instalación y Configuración
