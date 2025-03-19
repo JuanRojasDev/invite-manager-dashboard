@@ -41,15 +41,17 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
       setLoading(true);
       await supabaseSignIn(email, password);
       const currentUser = await getCurrentUser();
-      setUser(currentUser);
       
       if (currentUser) {
+        setUser(currentUser);
         toast.success(`Welcome back, ${currentUser.email}!`);
         navigate('/dashboard');
+      } else {
+        throw new Error('Failed to get user profile');
       }
     } catch (error: any) {
       console.error('Sign in error:', error);
-      toast.error(`Sign in failed: ${error.message}`);
+      toast.error(`Sign in failed: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -64,7 +66,7 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
       navigate('/login');
     } catch (error: any) {
       console.error('Sign out error:', error);
-      toast.error(`Sign out failed: ${error.message}`);
+      toast.error(`Sign out failed: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }

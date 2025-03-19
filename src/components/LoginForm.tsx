@@ -6,16 +6,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { ChevronRight, Lock, Mail } from 'lucide-react';
+import { ChevronRight, Lock, Mail, AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { signIn, loading } = useAuth();
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn(email, password);
+    setError(null);
+    try {
+      await signIn(email, password);
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed');
+    }
   };
 
   return (
@@ -28,6 +35,13 @@ export const LoginForm = () => {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">
               Email
@@ -62,6 +76,12 @@ export const LoginForm = () => {
                 required
               />
             </div>
+          </div>
+          
+          <div className="text-sm text-muted-foreground">
+            <p>Demo Credentials:</p>
+            <p>Admin: admin@example.com / adminpass</p>
+            <p>Guest: guest@example.com / guestpass</p>
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">

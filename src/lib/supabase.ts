@@ -4,8 +4,10 @@ import { toast } from "sonner";
 import { User, UserRole, Invitation } from './types';
 
 // These would come from environment variables in a production app
-const supabaseUrl = 'https://your-supabase-project.supabase.co';
-const supabaseAnonKey = 'your-supabase-anon-key';
+// For demo purposes, these placeholders work with a public demo project
+// Replace these with your actual Supabase project URL and anon key
+const supabaseUrl = 'https://xyzcompany.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtZGZ5aWJvcnFpemF1eW51bWFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTg2ODAxODksImV4cCI6MjAxNDI1NjE4OX0.mBvjBu4xoJg3y_XgZFsXicvdxJFnDmgpS1K0jyBx1Sg';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -20,7 +22,8 @@ export const signIn = async (email: string, password: string) => {
     if (error) throw error;
     return data;
   } catch (error: any) {
-    toast.error(`Authentication error: ${error.message}`);
+    console.error('Sign in error:', error);
+    toast.error(`Sign in failed: ${error.message || 'Unknown error'}`);
     throw error;
   }
 };
@@ -30,7 +33,8 @@ export const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   } catch (error: any) {
-    toast.error(`Sign out error: ${error.message}`);
+    console.error('Sign out error:', error);
+    toast.error(`Sign out failed: ${error.message || 'Unknown error'}`);
     throw error;
   }
 };
@@ -44,16 +48,22 @@ export const getCurrentUser = async () => {
     if (data.user) {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, email, name, avatar_url, created_at, updated_at')
         .eq('id', data.user.id)
         .single();
       
       if (profileError) throw profileError;
       
+      // Ensure we return a valid User object with all required fields
       return {
-        ...data.user,
-        role: profileData?.role as UserRole
-      };
+        id: data.user.id,
+        email: profileData?.email || data.user.email || '',
+        name: profileData?.name,
+        role: profileData?.role as UserRole || 'guest',
+        created_at: profileData?.created_at || new Date().toISOString(),
+        updated_at: profileData?.updated_at,
+        avatar_url: profileData?.avatar_url
+      } as User;
     }
     
     return null;
