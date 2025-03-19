@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { User, UserRole, Invitation } from './types';
 
@@ -127,6 +128,10 @@ export const createInvitation = async (email: string, role: UserRole = 'guest') 
     // Add to mock invitations
     mockInvitations.push(newInvitation);
     
+    // Create a payload for the email
+    const invitationUrl = `${window.location.origin}/invitation/${token}`;
+    console.log('Email would be sent with invitation URL:', invitationUrl);
+    
     toast.success(`Invitation sent to ${email}`);
     return newInvitation;
   } catch (error: any) {
@@ -155,7 +160,7 @@ export const acceptInvitation = async (token: string, password: string) => {
     
     // Create the new user
     const newUserId = (mockUsers.length + 1).toString();
-    const newUser: User = {
+    const newUser = {
       id: newUserId,
       email: invitation.email,
       name: invitation.email.split('@')[0],
@@ -177,6 +182,9 @@ export const acceptInvitation = async (token: string, password: string) => {
         accepted_at: new Date().toISOString()
       };
     }
+    
+    // Send welcome email (simulated)
+    console.log(`Welcome email would be sent to ${invitation.email}`);
     
     toast.success('Invitation accepted successfully!');
     return newUser;
@@ -250,7 +258,7 @@ export const supabase = {
             await delay(300);
             
             if (table === 'profiles') {
-              const user = mockUsers.find(u => u[field as keyof User] === value);
+              const user = mockUsers.find(u => u[field as keyof typeof u] === value);
               return { data: user, error: null };
             }
             

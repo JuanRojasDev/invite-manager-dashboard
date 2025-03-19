@@ -15,9 +15,15 @@ export const InvitationForm = () => {
   const [loading, setLoading] = useState(false);
   const [invitation, setInvitation] = useState<{ token: string; url: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !email.includes('@')) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
     
     try {
       setLoading(true);
@@ -53,13 +59,24 @@ export const InvitationForm = () => {
   const handleSendEmail = () => {
     if (invitation) {
       // In a real application, this would call an API to send an email
-      // For now, we'll just simulate it
-      toast.success(`Invitation email sent to ${email}`);
+      // For now, we'll just simulate it with console logs and toast
+      console.log(`Sending invitation email to: ${email}`);
+      console.log(`Invitation URL: ${invitation.url}`);
+      
+      // Simulate email sending delay
+      setEmailSent(true);
+      setTimeout(() => {
+        setEmailSent(false);
+        toast.success(`Invitation email sent to ${email}`);
+      }, 1500);
       
       // Reset the form after sending
-      setEmail('');
-      setRole('guest');
-      setInvitation(null);
+      setTimeout(() => {
+        setEmail('');
+        setRole('guest');
+        setInvitation(null);
+        setEmailSent(false);
+      }, 2500);
     }
   };
 
@@ -138,9 +155,19 @@ export const InvitationForm = () => {
               type="button"
               className="flex-1"
               onClick={handleSendEmail}
+              disabled={emailSent}
             >
-              <Mail className="mr-2 h-4 w-4" />
-              Send Email
+              {emailSent ? (
+                <>
+                  <Send className="mr-2 h-4 w-4 animate-pulse" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Send Email
+                </>
+              )}
             </Button>
           </div>
           
