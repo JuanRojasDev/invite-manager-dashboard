@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { User, UserRole, Invitation } from './types';
 
@@ -274,7 +273,13 @@ export const supabase = {
         if (table === 'invitations') {
           const newInvitation = { ...items[0], id: (mockInvitations.length + 1).toString() };
           mockInvitations.push(newInvitation as any);
-          return { data: newInvitation, error: null, select: () => ({ single: () => ({ data: newInvitation, error: null }) }) };
+          return { 
+            data: newInvitation, 
+            error: null, 
+            select: () => ({ 
+              single: () => ({ data: newInvitation, error: null }) 
+            }) 
+          };
         }
         
         if (table === 'profiles') {
@@ -291,7 +296,7 @@ export const supabase = {
         }
         
         return { data: null, error: null };
-      }),
+      },
       update: async (item: any) => {
         await delay(500);
         
@@ -304,7 +309,7 @@ export const supabase = {
         }
         
         return { data: null, error: null };
-      })
+      }
     };
   }
 };
