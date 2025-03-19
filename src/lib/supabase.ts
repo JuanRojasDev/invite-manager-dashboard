@@ -1,40 +1,105 @@
-
 import { toast } from "sonner";
 import { User, UserRole, Invitation } from './types';
 
-// Mock data for demonstration purposes
-const mockUsers = [
-  {
-    id: '1',
-    email: 'admin@example.com',
-    name: 'Admin User',
-    role: 'admin' as UserRole,
-    created_at: '2023-01-01T00:00:00Z',
-    updated_at: '2023-01-01T00:00:00Z',
-    avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'
-  },
-  {
-    id: '2',
-    email: 'guest@example.com',
-    name: 'Guest User',
-    role: 'guest' as UserRole,
-    created_at: '2023-01-02T00:00:00Z',
-    updated_at: '2023-01-02T00:00:00Z',
-    avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest'
+// Initialize mock data from localStorage or use defaults
+const getInitialMockUsers = (): User[] => {
+  try {
+    const storedUsers = localStorage.getItem('mockUsers');
+    return storedUsers ? JSON.parse(storedUsers) : [
+      {
+        id: '1',
+        email: 'admin@example.com',
+        name: 'Admin User',
+        role: 'admin' as UserRole,
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z',
+        avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'
+      },
+      {
+        id: '2',
+        email: 'guest@example.com',
+        name: 'Guest User',
+        role: 'guest' as UserRole,
+        created_at: '2023-01-02T00:00:00Z',
+        updated_at: '2023-01-02T00:00:00Z',
+        avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest'
+      }
+    ];
+  } catch (error) {
+    console.error('Error loading users from localStorage:', error);
+    return [
+      {
+        id: '1',
+        email: 'admin@example.com',
+        name: 'Admin User',
+        role: 'admin' as UserRole,
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z',
+        avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'
+      },
+      {
+        id: '2',
+        email: 'guest@example.com',
+        name: 'Guest User',
+        role: 'guest' as UserRole,
+        created_at: '2023-01-02T00:00:00Z',
+        updated_at: '2023-01-02T00:00:00Z',
+        avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest'
+      }
+    ];
   }
-];
+};
 
-const mockInvitations: Invitation[] = [
-  {
-    id: '1',
-    email: 'pending@example.com',
-    role: 'guest',
-    token: 'demo-invitation-token',
-    status: 'pending',
-    created_at: '2023-05-01T00:00:00Z',
-    created_by: '1',
+const getInitialMockInvitations = (): Invitation[] => {
+  try {
+    const storedInvitations = localStorage.getItem('mockInvitations');
+    return storedInvitations ? JSON.parse(storedInvitations) : [
+      {
+        id: '1',
+        email: 'pending@example.com',
+        role: 'guest',
+        token: 'demo-invitation-token',
+        status: 'pending',
+        created_at: '2023-05-01T00:00:00Z',
+        created_by: '1',
+      }
+    ];
+  } catch (error) {
+    console.error('Error loading invitations from localStorage:', error);
+    return [
+      {
+        id: '1',
+        email: 'pending@example.com',
+        role: 'guest',
+        token: 'demo-invitation-token',
+        status: 'pending',
+        created_at: '2023-05-01T00:00:00Z',
+        created_by: '1',
+      }
+    ];
   }
-];
+};
+
+// Load initial data from localStorage
+let mockUsers: User[] = getInitialMockUsers();
+let mockInvitations: Invitation[] = getInitialMockInvitations();
+
+// Helper functions to persist data to localStorage
+const persistUsers = () => {
+  try {
+    localStorage.setItem('mockUsers', JSON.stringify(mockUsers));
+  } catch (error) {
+    console.error('Error saving users to localStorage:', error);
+  }
+};
+
+const persistInvitations = () => {
+  try {
+    localStorage.setItem('mockInvitations', JSON.stringify(mockInvitations));
+  } catch (error) {
+    console.error('Error saving invitations to localStorage:', error);
+  }
+};
 
 // Simulates network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -132,6 +197,9 @@ export const createInvitation = async (email: string, role: UserRole = 'guest') 
     const invitationUrl = `${window.location.origin}/invitation/${token}`;
     console.log('Email would be sent with invitation URL:', invitationUrl);
     
+    // Save to localStorage
+    persistInvitations();
+    
     toast.success(`Invitation sent to ${email}`);
     return newInvitation;
   } catch (error: any) {
@@ -185,6 +253,10 @@ export const acceptInvitation = async (token: string, password: string) => {
     
     // Send welcome email (simulated)
     console.log(`Welcome email would be sent to ${invitation.email}`);
+    
+    // Save to localStorage
+    persistUsers();
+    persistInvitations();
     
     toast.success('Invitation accepted successfully!');
     return newUser;
@@ -281,6 +353,7 @@ export const supabase = {
         if (table === 'invitations') {
           const newInvitation = { ...items[0], id: (mockInvitations.length + 1).toString() };
           mockInvitations.push(newInvitation as any);
+          persistInvitations();
           return { 
             data: newInvitation, 
             error: null, 
@@ -300,6 +373,7 @@ export const supabase = {
             mockUsers.push(newProfile as any);
           }
           
+          persistUsers();
           return { data: newProfile, error: null };
         }
         
@@ -312,6 +386,7 @@ export const supabase = {
           const invIndex = mockInvitations.findIndex(inv => inv.id === item.id);
           if (invIndex >= 0) {
             mockInvitations[invIndex] = { ...mockInvitations[invIndex], ...item };
+            persistInvitations();
           }
           return { data: mockInvitations[invIndex], error: null };
         }
