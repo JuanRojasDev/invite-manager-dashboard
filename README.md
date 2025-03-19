@@ -1,11 +1,11 @@
-#Invite Manager Dashboard
+# Invite Manager Dashboard
 
-##📌 Descripción
+## 📌 Descripción
 
 Este proyecto es una aplicación desarrollada en Lovable para la gestión de invitaciones con autenticación y roles de usuario.
 La aplicación permite a los administradores generar invitaciones y gestionar usuarios, mientras que los invitados pueden aceptar las invitaciones y acceder a un dashboard con información relevante.
 
-##🚀 Tecnologías Utilizadas
+## 🚀 Tecnologías Utilizadas
 
 Lovable (Low-code platform)
 
@@ -13,7 +13,7 @@ Supabase (Autenticación y Base de Datos)
 
 GitHub (Repositorio del código fuente)
 
-##🎯 Funcionalidades
+## 🎯 Funcionalidades
 
 🔑 Autenticación de Usuario
 
@@ -31,13 +31,13 @@ Aceptar la invitación mediante la URL recibida.
 
 Acceder a un dashboard con mensajes generales.
 
-##🔗 Conexión a Plataformas
+## 🔗 Conexión a Plataformas
 
 Integración con GitHub: El código fuente está alojado en este repositorio.
 
 Conexión con Supabase: La base de datos almacena información sobre usuarios e invitaciones.
 
-##📸 Capturas de Pantalla
+## 📸 Capturas de Pantalla
 
 🔹 Pantalla de Inicio
 
