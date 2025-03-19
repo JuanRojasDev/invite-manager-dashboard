@@ -1,69 +1,80 @@
-# Welcome to your Lovable project
+#Invite Manager Dashboard
 
-## Project info
+##📌 Descripción
 
-**URL**: https://lovable.dev/projects/b34165f7-2106-4fa8-9da6-e8fc8ba40ff1
+Este proyecto es una aplicación desarrollada en Lovable para la gestión de invitaciones con autenticación y roles de usuario.
+La aplicación permite a los administradores generar invitaciones y gestionar usuarios, mientras que los invitados pueden aceptar las invitaciones y acceder a un dashboard con información relevante.
 
-## How can I edit this code?
+##🚀 Tecnologías Utilizadas
 
-There are several ways of editing your application.
+Lovable (Low-code platform)
 
-**Use Lovable**
+Supabase (Autenticación y Base de Datos)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b34165f7-2106-4fa8-9da6-e8fc8ba40ff1) and start prompting.
+GitHub (Repositorio del código fuente)
 
-Changes made via Lovable will be committed automatically to this repo.
+##🎯 Funcionalidades
 
-**Use your preferred IDE**
+🔑 Autenticación de Usuario
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Roles: Administrador e Invitado.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Administrador:
 
-Follow these steps:
+Ver la lista de personas invitadas.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Generar nuevas invitaciones (por URL o correo electrónico).
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Invitado:
 
-# Step 3: Install the necessary dependencies.
-npm i
+Aceptar la invitación mediante la URL recibida.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+Acceder a un dashboard con mensajes generales.
 
-**Edit a file directly in GitHub**
+##🔗 Conexión a Plataformas
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Integración con GitHub: El código fuente está alojado en este repositorio.
 
-**Use GitHub Codespaces**
+Conexión con Supabase: La base de datos almacena información sobre usuarios e invitaciones.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+##📸 Capturas de Pantalla
 
-## What technologies are used for this project?
+🔹 Pantalla de Inicio
 
-This project is built with .
+![image](https://github.com/user-attachments/assets/1e63173d-d08a-4e70-ad50-24d43b735b35)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+🔹 Inicio de Sesión
 
-## How can I deploy this project?
+![image](https://github.com/user-attachments/assets/acf8e8b0-0571-4f59-ab1d-a4560b3b3aa5)
 
-Simply open [Lovable](https://lovable.dev/projects/b34165f7-2106-4fa8-9da6-e8fc8ba40ff1) and click on Share -> Publish.
+🔹 Dashboard de Administrador
 
-## I want to use a custom domain - is that possible?
+![image](https://github.com/user-attachments/assets/3c196f6c-db90-4bf2-87e3-27d082afd7d1)
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+🔹 Dashboard de Usuario
+
+![image](https://github.com/user-attachments/assets/9924a2d4-2a8b-4375-ba92-02c9c6fea1e4)
+
+📥 Instalación y Configuración
+
+Clonar el repositorio:
+
+git clone https://github.com/JuanRojasDev/invite-manager-dashboard.git
+
+Configurar las variables de entorno para conectar con Supabase.
+
+Implementar la aplicación en Lovable y enlazarla con el backend.
+
+🔑 Credenciales de Prueba
+
+Administrador
+
+Usuario: admin@example.com
+
+Contraseña: adminpass
+
+Invitado
+
+Usuario: guest@example.com
+
+Contraseña: guestpass
