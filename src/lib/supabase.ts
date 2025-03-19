@@ -1,26 +1,65 @@
 
-import { createClient } from '@supabase/supabase-js';
 import { toast } from "sonner";
 import { User, UserRole, Invitation } from './types';
 
-// These would come from environment variables in a production app
-// For demo purposes, these placeholders work with a public demo project
-// Replace these with your actual Supabase project URL and anon key
-const supabaseUrl = 'https://xyzcompany.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtZGZ5aWJvcnFpemF1eW51bWFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTg2ODAxODksImV4cCI6MjAxNDI1NjE4OX0.mBvjBu4xoJg3y_XgZFsXicvdxJFnDmgpS1K0jyBx1Sg';
+// Mock data for demonstration purposes
+const mockUsers = [
+  {
+    id: '1',
+    email: 'admin@example.com',
+    name: 'Admin User',
+    role: 'admin' as UserRole,
+    created_at: '2023-01-01T00:00:00Z',
+    updated_at: '2023-01-01T00:00:00Z',
+    avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'
+  },
+  {
+    id: '2',
+    email: 'guest@example.com',
+    name: 'Guest User',
+    role: 'guest' as UserRole,
+    created_at: '2023-01-02T00:00:00Z',
+    updated_at: '2023-01-02T00:00:00Z',
+    avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest'
+  }
+];
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const mockInvitations: Invitation[] = [
+  {
+    id: '1',
+    email: 'pending@example.com',
+    role: 'guest',
+    token: 'demo-invitation-token',
+    status: 'pending',
+    created_at: '2023-05-01T00:00:00Z',
+    created_by: '1',
+  }
+];
+
+// Simulates network delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Auth functions
 export const signIn = async (email: string, password: string) => {
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) throw error;
-    return data;
+    // Simulate network request
+    await delay(800);
+    
+    // Simple validation
+    if (!email || !password) {
+      throw new Error('Email and password are required');
+    }
+    
+    // Mock authentication logic
+    if (
+      (email === 'admin@example.com' && password === 'adminpass') ||
+      (email === 'guest@example.com' && password === 'guestpass')
+    ) {
+      console.log('Mock sign in successful');
+      return { user: mockUsers.find(u => u.email === email) };
+    } else {
+      throw new Error('Invalid email or password');
+    }
   } catch (error: any) {
     console.error('Sign in error:', error);
     toast.error(`Sign in failed: ${error.message || 'Unknown error'}`);
@@ -30,8 +69,10 @@ export const signIn = async (email: string, password: string) => {
 
 export const signOut = async () => {
   try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    // Simulate network request
+    await delay(500);
+    console.log('Mock sign out successful');
+    return {};
   } catch (error: any) {
     console.error('Sign out error:', error);
     toast.error(`Sign out failed: ${error.message || 'Unknown error'}`);
@@ -41,31 +82,11 @@ export const signOut = async () => {
 
 export const getCurrentUser = async () => {
   try {
-    const { data, error } = await supabase.auth.getUser();
-    if (error) throw error;
-    
-    // Get the user's role from the profiles table
-    if (data.user) {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('role, email, name, avatar_url, created_at, updated_at')
-        .eq('id', data.user.id)
-        .single();
-      
-      if (profileError) throw profileError;
-      
-      // Ensure we return a valid User object with all required fields
-      return {
-        id: data.user.id,
-        email: profileData?.email || data.user.email || '',
-        name: profileData?.name,
-        role: profileData?.role as UserRole || 'guest',
-        created_at: profileData?.created_at || new Date().toISOString(),
-        updated_at: profileData?.updated_at,
-        avatar_url: profileData?.avatar_url
-      } as User;
+    // Check local storage for mock authentication
+    const storedUser = localStorage.getItem('mockCurrentUser');
+    if (storedUser) {
+      return JSON.parse(storedUser) as User;
     }
-    
     return null;
   } catch (error: any) {
     console.error(`Error getting current user: ${error.message}`);
@@ -76,14 +97,9 @@ export const getCurrentUser = async () => {
 // User related functions
 export const getUserProfile = async (userId: string) => {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
-    if (error) throw error;
-    return data as User;
+    await delay(300);
+    const user = mockUsers.find(u => u.id === userId);
+    return user || null;
   } catch (error: any) {
     console.error(`Error fetching user profile: ${error.message}`);
     return null;
@@ -93,30 +109,27 @@ export const getUserProfile = async (userId: string) => {
 // Invitation related functions
 export const createInvitation = async (email: string, role: UserRole = 'guest') => {
   try {
-    // Generate a unique token
-    const token = crypto.randomUUID();
+    await delay(500);
+    const token = Math.random().toString(36).substring(2, 15);
     const currentUser = await getCurrentUser();
     
     if (!currentUser) throw new Error('No authenticated user found');
     
-    const { data, error } = await supabase
-      .from('invitations')
-      .insert([
-        { 
-          email, 
-          role, 
-          token, 
-          created_by: currentUser.id,
-          status: 'pending'
-        }
-      ])
-      .select()
-      .single();
+    const newInvitation: Invitation = {
+      id: (mockInvitations.length + 1).toString(),
+      email,
+      role,
+      token,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      created_by: currentUser.id
+    };
     
-    if (error) throw error;
+    // Add to mock invitations
+    mockInvitations.push(newInvitation);
     
     toast.success(`Invitation sent to ${email}`);
-    return data as Invitation;
+    return newInvitation;
   } catch (error: any) {
     toast.error(`Error creating invitation: ${error.message}`);
     throw error;
@@ -125,14 +138,8 @@ export const createInvitation = async (email: string, role: UserRole = 'guest') 
 
 export const getInvitationByToken = async (token: string) => {
   try {
-    const { data, error } = await supabase
-      .from('invitations')
-      .select('*')
-      .eq('token', token)
-      .single();
-    
-    if (error) throw error;
-    return data as Invitation;
+    await delay(300);
+    return mockInvitations.find(inv => inv.token === token) || null;
   } catch (error: any) {
     console.error(`Error fetching invitation: ${error.message}`);
     return null;
@@ -141,45 +148,39 @@ export const getInvitationByToken = async (token: string) => {
 
 export const acceptInvitation = async (token: string, password: string) => {
   try {
+    await delay(800);
     const invitation = await getInvitationByToken(token);
     
     if (!invitation) throw new Error('Invalid or expired invitation');
     if (invitation.status !== 'pending') throw new Error('Invitation has already been used');
     
-    // Create the user in Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Create the new user
+    const newUserId = (mockUsers.length + 1).toString();
+    const newUser: User = {
+      id: newUserId,
       email: invitation.email,
-      password,
-    });
+      name: invitation.email.split('@')[0],
+      role: invitation.role,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${invitation.email}`
+    };
     
-    if (authError) throw authError;
+    // Add to mock users
+    mockUsers.push(newUser);
     
-    // Create a profile for the user
-    if (authData.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([{
-          id: authData.user.id,
-          email: invitation.email,
-          role: invitation.role,
-          name: invitation.email.split('@')[0], // Default name from email
-        }]);
-      
-      if (profileError) throw profileError;
-      
-      // Update invitation status
-      const { error: invitationError } = await supabase
-        .from('invitations')
-        .update({ status: 'accepted', accepted_at: new Date().toISOString() })
-        .eq('id', invitation.id);
-      
-      if (invitationError) throw invitationError;
-      
-      toast.success('Invitation accepted successfully!');
-      return authData.user;
+    // Update invitation status
+    const invIndex = mockInvitations.findIndex(inv => inv.token === token);
+    if (invIndex >= 0) {
+      mockInvitations[invIndex] = {
+        ...mockInvitations[invIndex],
+        status: 'accepted',
+        accepted_at: new Date().toISOString()
+      };
     }
     
-    throw new Error('Failed to create user');
+    toast.success('Invitation accepted successfully!');
+    return newUser;
   } catch (error: any) {
     toast.error(`Error accepting invitation: ${error.message}`);
     throw error;
@@ -188,13 +189,10 @@ export const acceptInvitation = async (token: string, password: string) => {
 
 export const getAllInvitations = async () => {
   try {
-    const { data, error } = await supabase
-      .from('invitations')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data as Invitation[];
+    await delay(500);
+    return [...mockInvitations].sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   } catch (error: any) {
     console.error(`Error fetching invitations: ${error.message}`);
     return [];
@@ -203,15 +201,110 @@ export const getAllInvitations = async () => {
 
 export const getAllUsers = async () => {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data as User[];
+    await delay(500);
+    return [...mockUsers].sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   } catch (error: any) {
     console.error(`Error fetching users: ${error.message}`);
     return [];
+  }
+};
+
+// Helper function to store the current user in localStorage for the mock auth system
+export const setMockCurrentUser = (user: User | null) => {
+  if (user) {
+    localStorage.setItem('mockCurrentUser', JSON.stringify(user));
+  } else {
+    localStorage.removeItem('mockCurrentUser');
+  }
+};
+
+// No longer need the supabase client since we're using a mock system
+export const supabase = {
+  auth: {
+    getUser: async () => {
+      const user = await getCurrentUser();
+      return { data: { user }, error: null };
+    },
+    signOut: async () => {
+      localStorage.removeItem('mockCurrentUser');
+      return { error: null };
+    },
+    signInWithPassword: async ({ email, password }: { email: string; password: string }) => {
+      try {
+        const result = await signIn(email, password);
+        if (result.user) {
+          setMockCurrentUser(result.user as User);
+        }
+        return { data: result, error: null };
+      } catch (error: any) {
+        return { data: null, error };
+      }
+    }
+  },
+  from: (table: string) => {
+    return {
+      select: (fields: string) => ({
+        eq: (field: string, value: any) => ({
+          single: async () => {
+            await delay(300);
+            
+            if (table === 'profiles') {
+              const user = mockUsers.find(u => u[field as keyof User] === value);
+              return { data: user, error: null };
+            }
+            
+            if (table === 'invitations') {
+              const invitation = mockInvitations.find(i => i[field as keyof Invitation] === value);
+              return { data: invitation, error: null };
+            }
+            
+            return { data: null, error: null };
+          },
+          order: () => ({
+            data: mockUsers,
+            error: null
+          })
+        })
+      }),
+      insert: async (items: any[]) => {
+        await delay(500);
+        
+        if (table === 'invitations') {
+          const newInvitation = { ...items[0], id: (mockInvitations.length + 1).toString() };
+          mockInvitations.push(newInvitation as any);
+          return { data: newInvitation, error: null, select: () => ({ single: () => ({ data: newInvitation, error: null }) }) };
+        }
+        
+        if (table === 'profiles') {
+          const newProfile = { ...items[0] };
+          const existingUserIndex = mockUsers.findIndex(u => u.id === newProfile.id);
+          
+          if (existingUserIndex >= 0) {
+            mockUsers[existingUserIndex] = { ...mockUsers[existingUserIndex], ...newProfile };
+          } else {
+            mockUsers.push(newProfile as any);
+          }
+          
+          return { data: newProfile, error: null };
+        }
+        
+        return { data: null, error: null };
+      }),
+      update: async (item: any) => {
+        await delay(500);
+        
+        if (table === 'invitations') {
+          const invIndex = mockInvitations.findIndex(inv => inv.id === item.id);
+          if (invIndex >= 0) {
+            mockInvitations[invIndex] = { ...mockInvitations[invIndex], ...item };
+          }
+          return { data: mockInvitations[invIndex], error: null };
+        }
+        
+        return { data: null, error: null };
+      })
+    };
   }
 };

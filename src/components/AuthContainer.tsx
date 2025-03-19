@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { User, AuthContextType } from '@/lib/types';
-import { getCurrentUser, signIn as supabaseSignIn, signOut as supabaseSignOut } from '@/lib/supabase';
+import { getCurrentUser, signIn as supabaseSignIn, signOut as supabaseSignOut, setMockCurrentUser } from '@/lib/supabase';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -39,12 +39,12 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      await supabaseSignIn(email, password);
-      const currentUser = await getCurrentUser();
+      const { user: authUser } = await supabaseSignIn(email, password);
       
-      if (currentUser) {
-        setUser(currentUser);
-        toast.success(`Welcome back, ${currentUser.email}!`);
+      if (authUser) {
+        setUser(authUser);
+        setMockCurrentUser(authUser); // Store user in localStorage for our mock system
+        toast.success(`Welcome back, ${authUser.email}!`);
         navigate('/dashboard');
       } else {
         throw new Error('Failed to get user profile');
@@ -52,6 +52,7 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       console.error('Sign in error:', error);
       toast.error(`Sign in failed: ${error.message || 'Unknown error'}`);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -61,6 +62,7 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
     try {
       setLoading(true);
       await supabaseSignOut();
+      setMockCurrentUser(null); // Clear user from localStorage
       setUser(null);
       toast.success('You have been signed out');
       navigate('/login');
