@@ -38,9 +38,9 @@ La aplicación permite a los administradores generar invitaciones y gestionar us
 
 ## 📥 Instalación y Configuración
 1. Clonar el repositorio:
-``
+```
 git clone https://github.com/JuanRojasDev/invite-manager-dashboard.git
-``
+```
 2. Configurar las variables de entorno para conectar con Supabase.
 3. Implementar la aplicación en Lovable y enlazarla con el backend.
 
