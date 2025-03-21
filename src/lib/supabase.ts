@@ -3,9 +3,6 @@ import { toast } from "sonner";
 import { User, UserRole, Invitation } from './types';
 import { supabase } from "@/integrations/supabase/client";
 
-// Simulate network delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 // Auth functions
 export const signIn = async (email: string, password: string) => {
   try {
@@ -20,8 +17,17 @@ export const signIn = async (email: string, password: string) => {
     
     if (error) throw error;
     
-    console.log('Sign in successful:', data.user);
-    return { user: data.user };
+    // Get user profile
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+    
+    if (profileError) throw profileError;
+    
+    console.log('Sign in successful:', profileData);
+    return { user: profileData as User };
   } catch (error: any) {
     console.error('Sign in error:', error);
     toast.error(`Sign in failed: ${error.message || 'Unknown error'}`);
@@ -49,11 +55,16 @@ export const getCurrentUser = async () => {
     if (error) throw error;
     
     if (data.user) {
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', data.user.id)
         .single();
+      
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        return null;
+      }
       
       return profileData as User;
     }
@@ -86,8 +97,9 @@ export const getUserProfile = async (userId: string) => {
 export const createInvitation = async (email: string, role: UserRole = 'guest') => {
   try {
     const token = Math.random().toString(36).substring(2, 15);
-    const { data: userData } = await supabase.auth.getUser();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
     
+    if (userError) throw userError;
     if (!userData.user) throw new Error('No authenticated user found');
     
     const { data, error } = await supabase
@@ -185,11 +197,13 @@ export const acceptInvitation = async (token: string, password: string) => {
     toast.success('Invitation accepted successfully!');
     
     // Get the complete user profile
-    const { data: profileData } = await supabase
+    const { data: profileData, error: getUserError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', authData.user.id)
       .single();
+    
+    if (getUserError) throw getUserError;
     
     return profileData as User;
   } catch (error: any) {

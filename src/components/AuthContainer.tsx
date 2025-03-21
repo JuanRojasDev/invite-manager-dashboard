@@ -3,7 +3,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { User, AuthContextType } from '@/lib/types';
-import { getCurrentUser, signIn as supabaseSignIn, signOut as supabaseSignOut, setMockCurrentUser } from '@/lib/supabase';
+import { getCurrentUser, signIn as supabaseSignIn, signOut as supabaseSignOut } from '@/lib/supabase';
+import { supabase } from "@/integrations/supabase/client";
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -21,10 +22,24 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUser = async () => {
+    // First set up an auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session) {
+          const user = await getCurrentUser();
+          setUser(user);
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      }
+    );
+
+    // Then check for existing session
+    const checkUser = async () => {
       try {
-        const currentUser = await getCurrentUser();
-        setUser(currentUser);
+        const user = await getCurrentUser();
+        setUser(user);
       } catch (error) {
         console.error('Error fetching user:', error);
         setUser(null);
@@ -33,7 +48,11 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    fetchUser();
+    checkUser();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -43,7 +62,6 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
       
       if (authUser) {
         setUser(authUser);
-        setMockCurrentUser(authUser); // Store user in localStorage for our mock system
         toast.success(`Welcome back, ${authUser.email}!`);
         navigate('/dashboard');
       } else {
@@ -62,7 +80,6 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
     try {
       setLoading(true);
       await supabaseSignOut();
-      setMockCurrentUser(null); // Clear user from localStorage
       setUser(null);
       toast.success('You have been signed out');
       navigate('/login');
