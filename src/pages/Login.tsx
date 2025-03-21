@@ -16,6 +16,16 @@ const Login = () => {
     }
   }, [user, loading, navigate]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-center">
+          <p className="text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />

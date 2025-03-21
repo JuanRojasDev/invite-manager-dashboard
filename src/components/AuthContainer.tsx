@@ -3,7 +3,6 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { User, AuthContextType } from '@/lib/types';
-import { getCurrentUser, signIn as supabaseSignIn, signOut as supabaseSignOut } from '@/lib/supabase';
 import { supabase } from "@/integrations/supabase/client";
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +20,27 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Helper function to fetch user profile
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+      
+      return data as User;
+    } catch (error: any) {
+      console.error(`Error in fetchUserProfile: ${error.message}`);
+      return null;
+    }
+  };
+
   useEffect(() => {
     // First set up an auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -28,8 +48,19 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
         console.log('Auth state changed:', event, session);
         if (session) {
           try {
-            const user = await getCurrentUser();
-            setUser(user);
+            const userData = await fetchUserProfile(session.user.id);
+            if (userData) {
+              setUser(userData);
+            } else {
+              // If we can't find a profile but have a session, create a basic user object
+              // This handles cases where the profile might not exist yet
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+                role: 'guest', // Default role
+                created_at: new Date().toISOString(),
+              });
+            }
           } catch (error) {
             console.error('Error getting user after auth change:', error);
             setUser(null);
@@ -47,8 +78,18 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
         const { data } = await supabase.auth.getSession();
         if (data.session) {
           console.log('Found existing session:', data.session);
-          const user = await getCurrentUser();
-          setUser(user);
+          const userData = await fetchUserProfile(data.session.user.id);
+          if (userData) {
+            setUser(userData);
+          } else {
+            // Create basic user if profile not found
+            setUser({
+              id: data.session.user.id,
+              email: data.session.user.email || '',
+              role: 'guest',
+              created_at: new Date().toISOString(),
+            });
+          }
         } else {
           console.log('No existing session found');
           setUser(null);
@@ -79,9 +120,20 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       
       if (data.user) {
-        const userData = await getCurrentUser();
-        setUser(userData);
-        toast.success(`Welcome back, ${userData?.email || 'User'}!`);
+        // Get user profile or create basic user object if profile not found
+        const userData = await fetchUserProfile(data.user.id);
+        if (userData) {
+          setUser(userData);
+        } else {
+          setUser({
+            id: data.user.id,
+            email: data.user.email || '',
+            role: 'guest',
+            created_at: new Date().toISOString(),
+          });
+        }
+        
+        toast.success(`Welcome back, ${email}!`);
         navigate('/dashboard');
       } else {
         throw new Error('Failed to get user profile');
@@ -98,7 +150,7 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     try {
       setLoading(true);
-      await supabaseSignOut();
+      await supabase.auth.signOut();
       setUser(null);
       toast.success('You have been signed out');
       navigate('/login');

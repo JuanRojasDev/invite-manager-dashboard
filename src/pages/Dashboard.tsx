@@ -11,7 +11,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If not logged in, redirect to login page
+    // If not logged in and not loading, redirect to login page
     if (!loading && !user) {
       navigate('/login');
     }
