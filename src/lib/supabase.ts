@@ -1,22 +1,17 @@
-
 import { toast } from "sonner";
 import { User, UserRole, Invitation } from './types';
 import { supabase } from "@/integrations/supabase/client";
 
 // Auth functions
 export const signIn = async (email: string, password: string) => {
-  try {
-    if (!email || !password) {
-      throw new Error('Email and password are required');
-    }
-    
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    
-    if (error) throw error;
-    
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+  
+  if (error) throw error;
+  
+  if (data.user) {
     // Get user profile
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
@@ -28,25 +23,15 @@ export const signIn = async (email: string, password: string) => {
     
     console.log('Sign in successful:', profileData);
     return { user: profileData as User };
-  } catch (error: any) {
-    console.error('Sign in error:', error);
-    toast.error(`Sign in failed: ${error.message || 'Unknown error'}`);
-    throw error;
   }
+  
+  throw new Error('Failed to get user profile');
 };
 
 export const signOut = async () => {
-  try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    
-    console.log('Sign out successful');
-    return {};
-  } catch (error: any) {
-    console.error('Sign out error:', error);
-    toast.error(`Sign out failed: ${error.message || 'Unknown error'}`);
-    throw error;
-  }
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+  return {};
 };
 
 export const getCurrentUser = async () => {

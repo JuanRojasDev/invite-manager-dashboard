@@ -21,7 +21,15 @@ export const LoginForm = () => {
     try {
       await signIn(email, password);
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      const errorMessage = err.message || 'Authentication failed';
+      console.error('Login error:', err);
+      
+      // Check if the error is about invalid credentials
+      if (errorMessage.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please try again or use the demo credentials below.');
+      } else {
+        setError(errorMessage);
+      }
     }
   };
 
@@ -78,10 +86,13 @@ export const LoginForm = () => {
             </div>
           </div>
           
-          <div className="text-sm text-muted-foreground">
-            <p>Demo Credentials:</p>
-            <p>Admin: admin@example.com / adminpass</p>
-            <p>Guest: guest@example.com / guestpass</p>
+          <div className="text-sm text-muted-foreground p-3 bg-secondary/30 rounded-md">
+            <p className="font-medium mb-1">Demo Credentials:</p>
+            <p className="text-xs">Since this app uses Supabase auth, you need to:</p>
+            <ol className="list-decimal text-xs ml-4 mt-1 space-y-1">
+              <li>Create an account through an invitation (WIP)</li>
+              <li>Or sign up directly through the Supabase dashboard</li>
+            </ol>
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">

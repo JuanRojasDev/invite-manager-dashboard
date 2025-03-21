@@ -25,9 +25,15 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
     // First set up an auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session);
         if (session) {
-          const user = await getCurrentUser();
-          setUser(user);
+          try {
+            const user = await getCurrentUser();
+            setUser(user);
+          } catch (error) {
+            console.error('Error getting user after auth change:', error);
+            setUser(null);
+          }
         } else {
           setUser(null);
         }
@@ -38,8 +44,15 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
     // Then check for existing session
     const checkUser = async () => {
       try {
-        const user = await getCurrentUser();
-        setUser(user);
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          console.log('Found existing session:', data.session);
+          const user = await getCurrentUser();
+          setUser(user);
+        } else {
+          console.log('No existing session found');
+          setUser(null);
+        }
       } catch (error) {
         console.error('Error fetching user:', error);
         setUser(null);
@@ -58,11 +71,17 @@ export const AuthContainer = ({ children }: { children: React.ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { user: authUser } = await supabaseSignIn(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      if (authUser) {
-        setUser(authUser);
-        toast.success(`Welcome back, ${authUser.email}!`);
+      if (error) throw error;
+      
+      if (data.user) {
+        const userData = await getCurrentUser();
+        setUser(userData);
+        toast.success(`Welcome back, ${userData?.email || 'User'}!`);
         navigate('/dashboard');
       } else {
         throw new Error('Failed to get user profile');
